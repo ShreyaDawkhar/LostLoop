@@ -1,0 +1,1456 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>LostLoop — Campus Lost & Found</title>
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+
+  <!-- FIRST-ENTRY COLLEGE SELECTION SCREEN (ONBOARDING SCREEN) -->
+  <div id="collegeSelectionOverlay" class="college-selection-overlay" style="display: none;" role="dialog" aria-modal="true" aria-labelledby="collegeModalTitle">
+    <div class="college-selection-container">
+      
+      <!-- Brand & Welcome Header -->
+      <div class="college-welcome-header">
+        <div class="college-brand-emblem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.739-8z"></path>
+          </svg>
+        </div>
+        <div class="college-brand-badge">
+          <span>Campus Lost & Found Network</span>
+        </div>
+        <h1 id="collegeModalTitle" class="college-welcome-title">Welcome to LostLoop</h1>
+        <p class="college-welcome-sub">Your campus. Your community. Let's reunite what matters.</p>
+      </div>
+
+      <!-- College Selection Card -->
+      <div class="college-card">
+        
+        <!-- Search Input Bar -->
+        <div class="college-search-box">
+          <svg class="college-search-icon" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input 
+            type="text" 
+            id="collegeSearchInput" 
+            class="college-search-input" 
+            placeholder="Search your college or university" 
+            autocomplete="off"
+            aria-label="Search your college or university"
+            oninput="handleCollegeSearchInput(event)"
+          />
+          <button 
+            type="button" 
+            id="btnCollegeSearchClear" 
+            class="college-search-clear-btn" 
+            style="display: none;" 
+            onclick="clearCollegeSearch()" 
+            aria-label="Clear search query"
+          >
+            ✕
+          </button>
+        </div>
+
+        <!-- Selected College Banner (when a college is picked) -->
+        <div id="selectedCollegeBanner" class="selected-college-banner" style="display: none;">
+          <div class="selected-college-info">
+            <span class="selected-check-pill">✓ Selected Campus</span>
+            <div id="selectedCollegeName" class="selected-name">JSPM University</div>
+            <div id="selectedCollegeMeta" class="selected-meta">Wagholi Campus • Pune, Maharashtra</div>
+          </div>
+          <button type="button" class="btn-clear-selection" onclick="clearSelectedCollege()" title="Change selection">
+            Change
+          </button>
+        </div>
+
+        <!-- Searchable College Results List -->
+        <div id="collegeResultsList" class="college-results-list" role="listbox" aria-label="College Directory">
+          <!-- Populated dynamically by renderCollegeSelectionList() -->
+        </div>
+
+        <!-- Empty State (No Results) -->
+        <div id="collegeEmptyState" class="college-empty-state" style="display: none;">
+          <div class="college-empty-icon">🏛️</div>
+          <h4 class="college-empty-title">No matching campuses found</h4>
+          <p id="collegeEmptyQuery" class="college-empty-text">We couldn't find any college matching your search. Try searching by city (e.g. Pune, Mumbai) or short code.</p>
+        </div>
+
+        <!-- Continue Button -->
+        <button 
+          type="button" 
+          id="btnContinueToApp" 
+          class="btn-college-continue" 
+          disabled 
+          onclick="confirmCollegeSelection()"
+        >
+          Continue to LostLoop →
+        </button>
+
+        <!-- Small Helper Note -->
+        <p class="college-card-note">
+          Choose your campus to discover relevant lost and found reports.
+        </p>
+
+        <!-- Prototype Disclaimer Tag -->
+        <div class="college-card-disclaimer">
+          <span>🔒 Demo Mode: Browsing and matching are scoped to your chosen campus. In production, institutional SSO verifies membership.</span>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
+
+  <!-- Outer Editorial Gallery Frame -->
+  <div class="page-canvas">
+
+    <!-- Top Editorial Header (Tran Mau Tri Tam Reference) -->
+    <header class="editorial-header">
+      <a href="#" class="brand-block" onclick="switchTab('browse'); return false;" aria-label="LostLoop Home">
+        <div class="brand-emblem">
+          <!-- Geometric Infinity Loop Ribbon Icon -->
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.739-8z"></path>
+          </svg>
+        </div>
+        <div class="brand-info">
+          <div class="brand-name">
+            LostLoop
+            <!-- Verified Check Badge -->
+            <svg class="verified-icon" viewBox="0 0 24 24" fill="currentColor">
+              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+            </svg>
+          </div>
+          <div class="brand-meta">
+            <span class="status-pill">Active on Campus</span>
+            <span class="status-follow">&bull; University Network</span>
+          </div>
+        </div>
+      </a>
+
+      <!-- Visible Header College Switcher -->
+      <div class="header-college-switcher" id="headerCollegeSwitcher">
+        <button type="button" class="college-switcher-chip" onclick="openCollegeSwitcherModal()" title="Switch College Campus" aria-label="Switch College Campus">
+          <span class="switcher-icon">🏛️</span>
+          <div class="switcher-labels">
+            <span id="navCollegeName" class="switcher-title">JSPM University</span>
+            <span id="navCampusName" class="switcher-subtitle">Wagholi Campus</span>
+          </div>
+          <svg class="switcher-arrow" width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M19 9l-7 7-7-7"></path>
+          </svg>
+        </button>
+      </div>
+
+      <!-- Middle Navigation Tabs -->
+      <nav class="header-nav" aria-label="Main Navigation">
+        <button class="header-nav-btn active nav-btn" data-tab="browse">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 10h16M4 14h16M4 18h16"></path>
+          </svg>
+          Browse Feed
+        </button>
+        <button class="header-nav-btn nav-btn" data-tab="report-lost">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Report Lost
+        </button>
+        <button class="header-nav-btn nav-btn" data-tab="report-found">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          Report Found
+        </button>
+        <button class="header-nav-btn nav-btn" data-tab="inspector">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+          </svg>
+          Match Inspector
+        </button>
+        <button class="header-nav-btn nav-btn" data-tab="tests">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+          </svg>
+          Test Runner
+        </button>
+        <button class="header-nav-btn nav-btn" data-tab="rewards">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+          </svg>
+          LoopPoints
+          <span id="navLoopPointsBadge" class="nav-points-chip">150 pts</span>
+        </button>
+      </nav>
+
+      <!-- Right Action Icons & Dark Mode Toggle -->
+      <div class="header-actions">
+        <!-- Theme Toggle Button (Light Editorial vs Deep Studio Dark) -->
+        <button class="icon-circle-btn" id="themeToggleBtn" onclick="toggleAppTheme()" title="Toggle Theme (Editorial Light / Studio Dark)" aria-label="Toggle Theme">
+          <svg id="themeIconSun" width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M20.354 15.354A9 9 0 018.646 3.646 9.003 9.003 0 0012 21a9.003 9.003 0 008.354-5.646z"></path>
+          </svg>
+        </button>
+
+        <!-- Quick Reset Demo Data -->
+        <button class="icon-circle-btn" onclick="resetToDemoData()" title="Reset Demo Data" aria-label="Reset Demo Data">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </button>
+
+        <!-- Primary Action Pill (From Reference: "Get in touch") -->
+        <button class="btn-pill-dark" onclick="switchTab('report-lost')">
+          + File Report
+        </button>
+      </div>
+    </header>
+
+    <!-- VIEW 1: BROWSE DASHBOARD (HERO + PILLARS + FEED) -->
+    <div id="view-browse" class="tab-view">
+
+      <!-- Editorial Hero (Tran Mau Tri Tam Reference) -->
+      <section class="editorial-hero">
+        <!-- Ambient Grain & Warm Sunburst Gradient -->
+        <div class="hero-ambient-mesh"></div>
+        <div class="hero-corner-triangle"></div>
+
+        <!-- Hero Left Copy -->
+        <div class="hero-copy-wrap">
+          <span class="hero-eyebrow">INTRODUCING A NEW CAMPUS RECOVERY NETWORK</span>
+          <h1 class="hero-title">
+            Reunite campus<br>
+            belongings, faster.
+          </h1>
+          <p class="hero-subtitle">
+            A transparent, privacy-first recovery platform for college students and faculty. Zero fake AI confidence — real, explainable reasons.
+          </p>
+
+          <!-- Floating Search Pill Bar (from reference) -->
+          <div class="hero-search-pill">
+            <input 
+              type="text" 
+              id="heroSearchInput" 
+              class="hero-search-input" 
+              placeholder="Find lost items, AirPods, Hydro Flask, keys..."
+              aria-label="Search belongings"
+            >
+            <button class="hero-search-btn" id="heroSearchBtn" aria-label="Search" onclick="triggerHeroSearch()">
+              <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2.5" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+              </svg>
+            </button>
+          </div>
+        </div>
+
+        <!-- Hero Right Visual Stage (Tran Mau Tri Tam Composition) -->
+        <div class="hero-visual-stage">
+          <!-- Right Intersecting Coral Circle with Arrow -->
+          <div class="visual-coral-circle" onclick="switchTab('inspector')" title="Explore Potential Matches">
+            <div class="coral-circle-arrow">
+              <svg width="32" height="32" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M14 5l7 7m0 0l-7 7m7-7H3"></path>
+              </svg>
+            </div>
+          </div>
+
+          <!-- Center Vibrant Green Circle -->
+          <div class="visual-green-circle">
+            <!-- Student Cutout Composite (College student with thumbs up) -->
+            <svg class="student-cutout" viewBox="0 0 300 360" fill="none" xmlns="http://www.w3.org/2000/svg">
+              <!-- Soft Shadow Base -->
+              <ellipse cx="150" cy="340" rx="90" ry="12" fill="rgba(0,0,0,0.12)" />
+              
+              <!-- Torso / Warm Caramel Knit Sweater (Like reference) -->
+              <path d="M70 360 C70 270, 85 240, 115 220 L185 220 C215 240, 230 270, 230 360 Z" fill="#c48a56" />
+              <path d="M120 220 C130 238, 170 238, 180 220 Z" fill="#a46d3e" opacity="0.6" />
+              <!-- Knit sweater texture lines -->
+              <path d="M100 280 Q150 290 200 280" stroke="#b07847" stroke-width="2" stroke-linecap="round"/>
+              <path d="M90 320 Q150 330 210 320" stroke="#b07847" stroke-width="2" stroke-linecap="round"/>
+
+              <!-- Left Arm Raised with Thumbs Up (Left in viewer perspective) -->
+              <path d="M72 260 C50 240, 48 190, 68 150 C74 138, 88 136, 92 148 C96 160, 86 210, 102 245 Z" fill="#c48a56" />
+              <!-- Hand & Thumbs Up Left -->
+              <ellipse cx="76" cy="144" rx="14" ry="16" fill="#fcd7b6" />
+              <!-- Upright Thumb -->
+              <path d="M72 148 C72 128, 80 120, 84 122 C88 124, 86 136, 82 148 Z" fill="#fcd7b6" stroke="#e8b890" stroke-width="1.5" />
+              <!-- Fingers curled -->
+              <circle cx="82" cy="144" r="5" fill="#f5caa4" />
+              <circle cx="82" cy="152" r="5" fill="#f5caa4" />
+
+              <!-- Right Arm Raised with Thumbs Up (Right in viewer perspective) -->
+              <path d="M228 260 C250 240, 252 190, 232 150 C226 138, 212 136, 208 148 C204 160, 214 210, 198 245 Z" fill="#c48a56" />
+              <!-- Hand & Thumbs Up Right -->
+              <ellipse cx="224" cy="144" rx="14" ry="16" fill="#fcd7b6" />
+              <!-- Upright Thumb -->
+              <path d="M228 148 C228 128, 220 120, 216 122 C212 124, 214 136, 218 148 Z" fill="#fcd7b6" stroke="#e8b890" stroke-width="1.5" />
+              <!-- Fingers curled -->
+              <circle cx="218" cy="144" r="5" fill="#f5caa4" />
+              <circle cx="218" cy="152" r="5" fill="#f5caa4" />
+
+              <!-- Neck -->
+              <path d="M135 185 L135 220 L165 220 L165 185 Z" fill="#f5caa4" />
+
+              <!-- Hair (Long blonde/light brown layered hair like reference) -->
+              <path d="M100 130 C90 180, 95 240, 110 270 C118 240, 112 180, 118 140 Z" fill="#c99f6b" />
+              <path d="M200 130 C210 180, 205 240, 190 270 C182 240, 188 180, 182 140 Z" fill="#c99f6b" />
+              <path d="M108 120 C108 60, 192 60, 192 120 C198 150, 190 190, 186 210 C180 180, 182 140, 178 130 C160 130, 140 130, 122 130 C118 140, 120 180, 114 210 C110 190, 102 150, 108 120 Z" fill="#d9ad74" />
+
+              <!-- Head / Face -->
+              <ellipse cx="150" cy="145" rx="34" ry="42" fill="#ffe2cb" />
+
+              <!-- Smiling Face Features -->
+              <!-- Eyes (happy closed crescent eyes) -->
+              <path d="M132 140 Q138 134 144 140" stroke="#4a3728" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <path d="M156 140 Q162 134 168 140" stroke="#4a3728" stroke-width="2.5" stroke-linecap="round" fill="none"/>
+              <!-- Cheerful eyebrows -->
+              <path d="M131 132 Q138 128 145 132" stroke="#875e38" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <path d="M155 132 Q162 128 169 132" stroke="#875e38" stroke-width="2" stroke-linecap="round" fill="none"/>
+              <!-- Cheeks (blush) -->
+              <circle cx="130" cy="150" r="6" fill="#ffb4a2" opacity="0.6"/>
+              <circle cx="170" cy="150" r="6" fill="#ffb4a2" opacity="0.6"/>
+              <!-- Nose -->
+              <path d="M150 144 Q152 149 148 150" stroke="#d49b74" stroke-width="1.8" stroke-linecap="round" fill="none"/>
+              <!-- Big Warm Smile with teeth -->
+              <path d="M136 158 Q150 174 164 158 Z" fill="#ffffff" stroke="#9e3b33" stroke-width="1.8" stroke-linejoin="round"/>
+              <path d="M136 158 Q150 174 164 158" stroke="#9e3b33" stroke-width="1.8" fill="none"/>
+            </svg>
+          </div>
+
+          <!-- Butter Yellow Speech Bubble (from reference) -->
+          <div class="visual-speech-bubble">
+            <div class="speech-bubble-line long"></div>
+            <div class="speech-bubble-line short"></div>
+            <div class="speech-bubble-text">Found my AirPods!</div>
+          </div>
+
+          <!-- Live Campus Pulse Stat Pill -->
+          <div class="visual-stat-pill">
+            <span class="stat-pulse-dot"></span>
+            <span><strong id="statMatchesCount">0</strong> Potential Matches</span>
+          </div>
+        </div>
+      </section>
+
+      <!-- 3-Column Feature Highlight Row (Tran Mau Tri Tam Style) -->
+      <section class="editorial-pillars-row" aria-label="System Pillars">
+        <!-- Pillar 1: Rule-Based Matching -->
+        <div class="pillar-item">
+          <div class="pillar-badge-art">
+            <!-- Geometric Triangle & Circle Art (Exact to reference) -->
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <path d="M8 8 L24 8 L8 24 Z" fill="#c084fc"/>
+              <circle cx="28" cy="16" r="10" fill="#fa723c"/>
+              <path d="M24 24 L24 40 L40 40 Z" fill="#208b5e"/>
+            </svg>
+          </div>
+          <h3 class="pillar-title">Rule-Based Matching</h3>
+          <p class="pillar-desc">
+            We built deterministic category, zone & keyword scoring with zero hallucinated AI percentages. You see the exact, transparent reasons.
+          </p>
+        </div>
+
+        <!-- Pillar 2: Identity Shield -->
+        <div class="pillar-item">
+          <div class="pillar-badge-art">
+            <!-- Overlapping Heart / Dual Lobes Geometric Art -->
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <circle cx="16" cy="16" r="10" fill="#fa723c"/>
+              <circle cx="28" cy="16" r="10" fill="#c084fc"/>
+              <path d="M12 26 L32 26 L22 38 Z" fill="#208b5e"/>
+            </svg>
+          </div>
+          <h3 class="pillar-title">Identity Shield</h3>
+          <p class="pillar-desc">
+            Masked student emails and verification challenge questions keep your personal phone numbers, dorm rooms, and sensitive IDs safe.
+          </p>
+        </div>
+
+        <!-- Pillar 3: Campus Safe Swaps -->
+        <div class="pillar-item">
+          <div class="pillar-badge-art">
+            <!-- Multi-Polygon Geometric Composition -->
+            <svg width="44" height="44" viewBox="0 0 44 44" fill="none">
+              <path d="M10 10 L26 10 L10 26 Z" fill="#208b5e"/>
+              <circle cx="18" cy="30" r="8" fill="#f8cc46"/>
+              <path d="M24 22 L40 38 L24 38 Z" fill="#c084fc"/>
+            </svg>
+          </div>
+          <h3 class="pillar-title">Campus Safe Swaps</h3>
+          <p class="pillar-desc">
+            Reunite through designated campus desks like the Student Union, Library, or Rec Center using one-time verification passcodes.
+          </p>
+        </div>
+      </section>
+
+      <!-- Dashboard Feed & Controls -->
+      <section class="dashboard-section" id="dashboard-feed-anchor">
+        <div class="dashboard-header-bar">
+          <div class="dashboard-title-group">
+            <h2>Campus Belongings Feed</h2>
+            <p>
+              Showing <strong id="feedCount">Loading...</strong> &bull; 
+              <span id="statLostCount">0</span> Lost &bull; 
+              <span id="statFoundCount">0</span> Found &bull; 
+              <span id="statReunitedCount">0</span> Reunited
+            </p>
+          </div>
+
+          <!-- Filter Toolbar -->
+          <div class="filter-toolbar">
+            <!-- Type Filter Pills -->
+            <div class="filter-pills-bar" role="group" aria-label="Item Type Filter">
+              <button class="filter-pill-btn type-pill active" data-type="all">All Items</button>
+              <button class="filter-pill-btn type-pill" data-type="lost">Lost</button>
+              <button class="filter-pill-btn type-pill" data-type="found">Found</button>
+              <button class="filter-pill-btn type-pill" data-type="reunited">Reunited</button>
+            </div>
+
+            <!-- Category & Location Dropdowns -->
+            <select id="filterCategory" class="select-dropdown-ctrl" aria-label="Filter by Category">
+              <option value="all">All Categories</option>
+            </select>
+
+            <select id="filterLocation" class="select-dropdown-ctrl" aria-label="Filter by Location">
+              <option value="all">All Campus Locations</option>
+            </select>
+
+            <select id="filterSortBy" class="select-dropdown-ctrl" aria-label="Sort items">
+              <option value="newest">Newest First</option>
+              <option value="oldest">Oldest First</option>
+              <option value="matches">Most Potential Matches</option>
+            </select>
+          </div>
+        </div>
+
+        <!-- Hidden input connected for search synchronization -->
+        <input type="hidden" id="searchInput" value="">
+
+        <!-- Cards Grid -->
+        <div id="itemsGrid" class="editorial-cards-grid">
+          <!-- Rendered dynamically by app.js -->
+        </div>
+      </section>
+
+    </div>
+
+    <!-- VIEW 2: REPORT LOST ITEM FORM -->
+    <div id="view-report-lost" class="tab-view" style="display: none; padding: 40px 36px;">
+      <div class="form-wrapper">
+        <div class="form-header-block">
+          <h2>
+            <span style="color: var(--accent-coral); margin-right: 6px;">●</span>
+            Report a Lost Belonging
+          </h2>
+          <p>Provide accurate details so the rule-based matching engine can immediately find potential matches across campus.</p>
+        </div>
+
+        <form id="reportLostForm" novalidate>
+          <!-- Active Campus Association Strip -->
+          <div class="form-college-badge-strip">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.1rem;">🏛️</span>
+              <span>Reporting for Campus: <strong id="formLostCollegeName">JSPM University (Wagholi Campus)</strong></span>
+            </div>
+            <button type="button" class="btn-text-change" onclick="openCollegeSwitcherModal()">Change Campus</button>
+          </div>
+
+          <div class="form-grid-layout">
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="lostTitle">
+                Item Title <span class="field-required-star">*</span>
+              </label>
+              <input type="text" id="lostTitle" class="form-text-input" placeholder="e.g. Sony WH-1000XM4 Silver Headphones" required>
+              <span class="field-help-text">Give a concise, descriptive title.</span>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="lostCategory">
+                Category <span class="field-required-star">*</span>
+              </label>
+              <select id="lostCategory" class="form-select-input" required>
+                <option value="">Select Category...</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="lostDate">
+                Date Lost <span class="field-required-star">*</span>
+              </label>
+              <input type="date" id="lostDate" class="form-text-input" required>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="lostLocationZone">
+                Campus Location Zone <span class="field-required-star">*</span>
+              </label>
+              <select id="lostLocationZone" class="form-select-input" required>
+                <option value="">Select Campus Zone...</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="lostLocationDetail">
+                Specific Spot / Landmark
+              </label>
+              <input type="text" id="lostLocationDetail" class="form-text-input" placeholder="e.g. Library 3rd floor quiet carrels near east window">
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="lostBrand">
+                Brand / Manufacturer
+              </label>
+              <input type="text" id="lostBrand" class="form-text-input" placeholder="e.g. Sony, Hydro Flask, Apple">
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="lostColor">
+                Primary Color
+              </label>
+              <input type="text" id="lostColor" class="form-text-input" placeholder="e.g. Silver, Navy Blue, Black">
+            </div>
+
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="lostDescription">
+                Description & Distinguishing Marks <span class="field-required-star">*</span>
+              </label>
+              <textarea id="lostDescription" class="form-textarea-input" rows="4" placeholder="Mention scratches, dents, stickers, engravings, or contents (at least 15 characters)..." required></textarea>
+              <span class="field-help-text">These keywords directly power the deterministic matching engine.</span>
+            </div>
+
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="lostVerification">
+                Secret Ownership Proof (Private to You)
+              </label>
+              <input type="text" id="lostVerification" class="form-text-input" placeholder="e.g. Lock screen photo, small scratch on left pivot, serial digits">
+              <span class="field-help-text">Used to verify ownership when someone finds your item without leaking personal data.</span>
+            </div>
+
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="lostEmail">
+                Campus Email Address <span class="field-required-star">*</span>
+              </label>
+              <input type="email" id="lostEmail" class="form-text-input" placeholder="your.name@campus.edu" required>
+
+              <div class="privacy-callout-box">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; color: var(--accent-blue);">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                <span>
+                  <strong>Privacy Guaranteed:</strong> Your email is automatically masked (e.g. <code>m.pat***@campus.edu</code>) and your phone number is never asked or exposed.
+                </span>
+              </div>
+            </div>
+
+            <div class="form-field-group col-full" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+              <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="switchTab('browse')">Cancel</button>
+              <button type="submit" class="btn-editorial-sm btn-editorial-lost">Publish Lost Report</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- VIEW 3: REPORT FOUND ITEM FORM -->
+    <div id="view-report-found" class="tab-view" style="display: none; padding: 40px 36px;">
+      <div class="form-wrapper">
+        <div class="form-header-block">
+          <h2>
+            <span style="color: var(--accent-green); margin-right: 6px;">●</span>
+            Report a Found Item
+          </h2>
+          <p>Thank you for helping a fellow student! Post details safely so the owner can verify their claim.</p>
+        </div>
+
+        <form id="reportFoundForm" novalidate>
+          <!-- Active Campus Association Strip -->
+          <div class="form-college-badge-strip">
+            <div style="display: flex; align-items: center; gap: 8px;">
+              <span style="font-size: 1.1rem;">🏛️</span>
+              <span>Reporting for Campus: <strong id="formFoundCollegeName">JSPM University (Wagholi Campus)</strong></span>
+            </div>
+            <button type="button" class="btn-text-change" onclick="openCollegeSwitcherModal()">Change Campus</button>
+          </div>
+
+          <div class="form-grid-layout">
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="foundTitle">
+                Found Item Summary <span class="field-required-star">*</span>
+              </label>
+              <input type="text" id="foundTitle" class="form-text-input" placeholder="e.g. Gray Sony Over-Ear Headphones in Zip Case" required>
+              <span class="field-help-text">General summary (keep private secrets hidden for the challenge question).</span>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="foundCategory">
+                Category <span class="field-required-star">*</span>
+              </label>
+              <select id="foundCategory" class="form-select-input" required>
+                <option value="">Select Category...</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="foundDate">
+                Date Found <span class="field-required-star">*</span>
+              </label>
+              <input type="date" id="foundDate" class="form-text-input" required>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="foundLocationZone">
+                Campus Location Zone <span class="field-required-star">*</span>
+              </label>
+              <select id="foundLocationZone" class="form-select-input" required>
+                <option value="">Select Campus Zone...</option>
+              </select>
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="foundLocationDetail">
+                Specific Location / Current Custody
+              </label>
+              <input type="text" id="foundLocationDetail" class="form-text-input" placeholder="e.g. Handed to Student Union Helpdesk Lockbox">
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="foundBrand">
+                Brand / Manufacturer
+              </label>
+              <input type="text" id="foundBrand" class="form-text-input" placeholder="e.g. Sony, Subaru, Hydro Flask">
+            </div>
+
+            <div class="form-field-group">
+              <label class="form-field-label" for="foundColor">
+                Primary Color
+              </label>
+              <input type="text" id="foundColor" class="form-text-input" placeholder="e.g. Gray, Navy Blue, Purple">
+            </div>
+
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="foundDescription">
+                Public Description <span class="field-required-star">*</span>
+              </label>
+              <textarea id="foundDescription" class="form-textarea-input" rows="3" placeholder="Describe the item's general appearance without giving away hidden features..." required></textarea>
+            </div>
+
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="foundVerificationQuestion">
+                Verification Challenge Question for Claimants <span class="field-required-star">*</span>
+              </label>
+              <input type="text" id="foundVerificationQuestion" class="form-text-input" placeholder="e.g. 'What specific stickers are adhered?' or 'What accessory is inside the case mesh pocket?'">
+              <span class="field-help-text">Anyone claiming this item must answer this question to substantiate ownership!</span>
+            </div>
+
+            <div class="form-field-group col-full">
+              <label class="form-field-label" for="foundEmail">
+                Your Campus Email <span class="field-required-star">*</span>
+              </label>
+              <input type="email" id="foundEmail" class="form-text-input" placeholder="finder@campus.edu" required>
+
+              <div class="privacy-callout-box">
+                <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; color: var(--accent-blue);">
+                  <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 15v2m-6 4h12a2 2 0 002-2v-6a2 2 0 00-2-2H6a2 2 0 00-2 2v6a2 2 0 002 2zm10-10V7a4 4 0 00-8 0v4h8z"></path>
+                </svg>
+                <span>
+                  <strong>Safe & Shielded:</strong> Your email address is masked publicly. When an owner claims the item, you review their answer without phone numbers or personal contacts exposed.
+                </span>
+              </div>
+            </div>
+
+            <div class="form-field-group col-full" style="display: flex; justify-content: flex-end; gap: 10px; margin-top: 10px;">
+              <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="switchTab('browse')">Cancel</button>
+              <button type="submit" class="btn-editorial-sm btn-editorial-found">Publish Found Report</button>
+            </div>
+          </div>
+        </form>
+      </div>
+    </div>
+
+    <!-- VIEW 4: MATCH INSPECTOR -->
+    <div id="view-inspector" class="tab-view" style="display: none; padding: 40px 36px;">
+      <div style="margin-bottom: 24px;">
+        <h2 style="font-size: 1.5rem; font-weight: 800; color: var(--text-headline);">Rule-Based Matching Inspector</h2>
+        <p style="font-size: 0.88rem; color: var(--text-muted); margin-top: 4px;">
+          Inspect how category, campus zone, description keywords, and date proximity are evaluated with explainable criteria — no black-box AI confidence scores.
+        </p>
+      </div>
+
+      <div class="inspector-grid-split">
+        <!-- Sidebar items list -->
+        <aside class="inspector-items-menu">
+          <div style="font-size: 0.74rem; font-weight: 700; text-transform: uppercase; color: var(--text-light); letter-spacing: 0.05em;">
+            Select Campus Item
+          </div>
+          <div id="inspectorItemList" class="inspector-list-group">
+            <!-- Rendered by JS -->
+          </div>
+        </aside>
+
+        <!-- Inspector Stage -->
+        <div id="inspectorDetailPanel" class="inspector-stage-panel">
+          <!-- Rendered by JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- VIEW 5: BEGINNER-FRIENDLY TEST RUNNER & SYSTEM CHECKS -->
+    <div id="view-tests" class="tab-view" style="display: none; padding: 40px 36px;">
+      <div style="max-width: 860px; margin: 0 auto;">
+        
+        <div class="test-runner-header">
+          <h2>LostLoop System Health & Accuracy Checks</h2>
+          <p>
+            Verify that LostLoop is matching campus belongings accurately, blocking unrelated items, and protecting student privacy.
+          </p>
+        </div>
+
+        <!-- Controls Bar -->
+        <div class="test-controls-bar">
+          <div class="test-execution-status">
+            <span class="test-status-dot" id="testLiveDot"></span>
+            <span id="testExecutionTimestamp">Status: Ready to run (Click 'Run All Checks')</span>
+          </div>
+
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <button class="btn-pill-dark" id="runTestsBtn" onclick="runBrowserTestSuite()">
+              ▶ Run All Checks
+            </button>
+            <button class="btn-editorial-sm btn-editorial-outline" onclick="resetToDemoData()" title="Reload fictional campus items">
+              ↻ Reset Demo Items
+            </button>
+          </div>
+        </div>
+
+        <!-- Dynamic Test Output (Stats Cards, Summary Banner, Plain English Cards) -->
+        <div id="testOutputDisplay">
+          <!-- Populated by runBrowserTestSuite() -->
+        </div>
+
+      </div>
+    </div>
+
+    <!-- VIEW 6: REWARDS & LOOPPOINTS WALLET -->
+    <div id="view-rewards" class="tab-view" style="display: none; padding: 40px 36px;">
+      <div style="max-width: 1040px; margin: 0 auto;">
+
+        <!-- Rewards Header Row -->
+        <div class="rewards-header-row">
+          <div>
+            <div style="display: flex; align-items: center; gap: 8px; margin-bottom: 4px; flex-wrap: wrap;">
+              <h2 style="font-size: 1.8rem; font-weight: 800; color: var(--text-headline); margin: 0;">LoopPoints — Campus Kindness Rewards</h2>
+              <span class="status-badge" style="background: #fef3c7; color: #b45309; border: 1px solid #fde68a;">Demo Prototype</span>
+            </div>
+            <p style="font-size: 0.92rem; color: var(--text-muted); margin: 0; max-width: 760px; line-height: 1.5;">
+              Celebrating verified acts of campus kindness. When you help safely reunite lost belongings with their rightful owners, you earn LoopPoints redeemable for campus perks.
+            </p>
+          </div>
+          <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+            <button class="btn-editorial-sm btn-editorial-outline" onclick="toggleAdminPanel()" id="adminToggleBtn">
+              ⚙️ Coordinator Controls
+            </button>
+            <button class="btn-pill-dark" onclick="simulateDemoReunionReward()">
+              + Simulate Reunion (+50 pts)
+            </button>
+          </div>
+        </div>
+
+        <!-- Prototype Disclaimer Banner -->
+        <div class="rewards-disclaimer-banner">
+          <div style="display: flex; align-items: flex-start; gap: 10px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="flex-shrink: 0; color: #d97706; margin-top: 2px;">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+            </svg>
+            <div style="font-size: 0.82rem; color: var(--text-body); line-height: 1.5;">
+              <strong>Campus Kindness Policy:</strong> LoopPoints celebrate verified acts of kindness and hold zero monetary value. Students earn exactly 50 LoopPoints for every successfully verified item return. Points cannot be bought, sold, or transferred. In this demo, ledger records persist in local browser storage. Production rollouts require authenticated accounts and server-enforced atomic transactions.
+            </div>
+          </div>
+        </div>
+
+        <!-- Coordinator / Admin Management Drawer (Collapsible) -->
+        <div id="adminPanelDrawer" class="admin-panel-box" style="display: none;">
+          <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px; border-bottom: 1px solid var(--border-light); padding-bottom: 8px;">
+            <div style="font-weight: 800; font-size: 0.92rem; color: var(--text-headline); display: flex; align-items: center; gap: 6px;">
+              <span>🛡️ Authorized Coordinator & Administrator Tools</span>
+            </div>
+            <button class="btn-editorial-sm btn-editorial-outline" onclick="toggleAdminPanel()">Hide</button>
+          </div>
+          <p style="font-size: 0.8rem; color: var(--text-muted); margin-bottom: 12px;">
+            Manage catalogue availability, audit student balances, adjust points with mandatory justification, or reset ledger to demo seeds.
+          </p>
+          <div style="display: flex; gap: 10px; flex-wrap: wrap;">
+            <button class="btn-editorial-sm btn-editorial-found" onclick="openAddRewardModal()">
+              + Add New Catalogue Reward
+            </button>
+            <button class="btn-editorial-sm btn-editorial-outline" onclick="openAdminAdjustModal()">
+              Audit Point Adjustment
+            </button>
+            <button class="btn-editorial-sm btn-editorial-outline" onclick="resetRewardsToSeed()">
+              ↻ Reset Rewards Ledger & Catalogue
+            </button>
+          </div>
+        </div>
+
+        <!-- Top Wallet Dashboard Grid -->
+        <div class="wallet-grid">
+          
+          <!-- Balance & Points Card -->
+          <div class="wallet-balance-card">
+            <div class="wallet-card-header">
+              <span class="wallet-pill-label">Student Kindness Balance</span>
+              <span class="wallet-currency-tag">⟳ LoopPoints</span>
+            </div>
+            
+            <div class="wallet-balance-row">
+              <span id="walletBalanceDisplay" class="wallet-balance-number">50</span>
+              <span class="wallet-balance-sub">pts available</span>
+            </div>
+
+            <div class="wallet-stats-strip">
+              <div class="wallet-stat-item">
+                <span class="stat-label">Total Earned</span>
+                <span id="walletTotalEarnedDisplay" class="stat-val font-green">+50</span>
+              </div>
+              <div class="wallet-stat-item">
+                <span class="stat-label">Redeemed</span>
+                <span id="walletTotalRedeemedDisplay" class="stat-val font-coral">0</span>
+              </div>
+              <div class="wallet-stat-item">
+                <span class="stat-label">Verified Reunions</span>
+                <span id="walletReunionsCount" class="stat-val">1</span>
+              </div>
+            </div>
+
+            <!-- Next Perk Progress Bar -->
+            <div class="wallet-progress-box">
+              <div class="wallet-progress-labels">
+                <span id="nextRewardNameLabel">Progress to Beverage Coupon (200 pts)</span>
+                <span id="nextRewardPtsLabel">150 / 200 pts</span>
+              </div>
+              <div class="wallet-progress-track">
+                <div id="walletProgressBar" class="wallet-progress-fill" style="width: 75%;"></div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Kindness Achievements & Badges Showcase -->
+          <div class="wallet-badges-card">
+            <div class="wallet-card-header">
+              <span class="wallet-pill-label">Kindness Achievements</span>
+              <span style="font-size: 0.74rem; color: var(--text-muted);">Verified Milestones</span>
+            </div>
+            <div id="badgesContainer" class="badges-grid">
+              <!-- Dynamically populated via evaluateUserBadges() -->
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Reward Catalogue Section -->
+        <div class="catalogue-section">
+          <div class="catalogue-header-row">
+            <div>
+              <h3 style="font-size: 1.25rem; font-weight: 800; color: var(--text-headline); margin: 0 0 4px 0;">Campus Reward Catalogue</h3>
+              <p style="font-size: 0.84rem; color: var(--text-muted); margin: 0;">Redeem your earned LoopPoints for official campus perks, refreshments, and stationery.</p>
+            </div>
+            <div class="catalogue-filter-bar">
+              <button class="cat-filter-btn active" data-cat="all" onclick="filterCatalogue('all')">All Perks</button>
+              <button class="cat-filter-btn" data-cat="Campus Swag" onclick="filterCatalogue('Campus Swag')">Swag</button>
+              <button class="cat-filter-btn" data-cat="Food & Drink" onclick="filterCatalogue('Food & Drink')">Food & Drink</button>
+              <button class="cat-filter-btn" data-cat="Academic" onclick="filterCatalogue('Academic')">Academic</button>
+            </div>
+          </div>
+
+          <!-- Catalogue Cards Grid -->
+          <div id="rewardsCatalogueGrid" class="rewards-cards-grid">
+            <!-- Populated dynamically -->
+          </div>
+        </div>
+
+        <!-- Ledger & Redemption Activity Tabs -->
+        <div class="activity-section">
+          <div class="activity-header-tabs">
+            <button id="tabBtnLedger" class="activity-tab-btn active" onclick="switchActivityTab('ledger')">
+              Recent Earning Activity & Ledger
+            </button>
+            <button id="tabBtnRedemptions" class="activity-tab-btn" onclick="switchActivityTab('redemptions')">
+              Redemption History & Vouchers
+            </button>
+          </div>
+
+          <!-- Tab Pane 1: Transaction Ledger -->
+          <div id="paneLedger" class="activity-pane">
+            <div id="transactionLedgerContainer" class="activity-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+
+          <!-- Tab Pane 2: Redemptions -->
+          <div id="paneRedemptions" class="activity-pane" style="display: none;">
+            <div id="redemptionsListContainer" class="activity-list">
+              <!-- Dynamically populated -->
+            </div>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div> <!-- /page-canvas -->
+
+  <!-- Mobile Bottom Navigation (Ergonomic Thumb Reach) -->
+  <nav class="editorial-mobile-bar" aria-label="Mobile Navigation">
+    <button class="mobile-bar-btn active mobile-nav-btn" data-tab="browse">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 6h16M4 12h16M4 18h7"></path>
+      </svg>
+      <span>Browse</span>
+    </button>
+    <button class="mobile-bar-btn mobile-nav-btn" data-tab="report-lost">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 9v3m0 0v3m0-3h3m-3 0H9m12 0a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>Lost</span>
+    </button>
+    <button class="mobile-bar-btn mobile-nav-btn" data-tab="report-found">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>Found</span>
+    </button>
+    <button class="mobile-bar-btn mobile-nav-btn" data-tab="inspector">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 10V3L4 14h7v7l9-11h-7z"></path>
+      </svg>
+      <span>Matches</span>
+    </button>
+    <button class="mobile-bar-btn mobile-nav-btn" data-tab="tests">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m5.618-4.016A11.955 11.955 0 0112 2.944a11.955 11.955 0 01-8.618 3.04A12.02 12.02 0 003 9c0 5.591 3.824 10.29 9 11.622 5.176-1.332 9-6.03 9-11.622 0-1.042-.133-2.052-.382-3.016z"></path>
+      </svg>
+      <span>Tests</span>
+    </button>
+    <button class="mobile-bar-btn mobile-nav-btn" data-tab="rewards">
+      <svg fill="none" stroke="currentColor" viewBox="0 0 24 24">
+        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+      </svg>
+      <span>Rewards</span>
+    </button>
+  </nav>
+
+  <!-- MODAL: ITEM DETAILS & CLAIMS HISTORY -->
+  <div id="itemDetailModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="modalItemTitle">
+    <div class="editorial-modal-card">
+      <div class="modal-header-row">
+        <h3 id="modalItemTitle">Report Details</h3>
+        <button class="modal-close-icon" onclick="closeModal('itemDetailModal')" aria-label="Close dialog">&times;</button>
+      </div>
+      <div id="itemDetailBody" class="modal-body-content">
+        <!-- Populated dynamically -->
+      </div>
+      <div id="itemDetailFooter" class="modal-footer-row">
+        <!-- Populated dynamically -->
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: SAFE CLAIM REQUEST FLOW -->
+  <div id="claimModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="claimModalHeading">
+    <div class="editorial-modal-card">
+      <div class="modal-header-row">
+        <h3 id="claimModalHeading">Submit Safe Ownership Claim</h3>
+        <button class="modal-close-icon" onclick="closeModal('claimModal')" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="safeClaimForm">
+        <div class="modal-body-content">
+          <div style="background-color: var(--bg-surface-subtle); padding: 14px; border-radius: var(--radius-md); border: 1px solid var(--border-light);">
+            <div style="font-size: 0.72rem; text-transform: uppercase; color: var(--text-light); font-weight: 700;">Claiming Item</div>
+            <div id="claimItemTitle" style="font-weight: 800; font-size: 1.05rem; color: var(--text-headline); margin-top: 2px;"></div>
+            <div id="claimItemMeta" style="font-size: 0.78rem; color: var(--text-muted); margin-top: 2px;"></div>
+          </div>
+
+          <!-- Finder's Verification Challenge Prompt -->
+          <div id="claimQuestionPrompt"></div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="claimProofAnswer">
+              Your Verification Answer / Unique Proof <span class="field-required-star">*</span>
+            </label>
+            <textarea 
+              id="claimProofAnswer" 
+              class="form-textarea-input" 
+              rows="3" 
+              placeholder="State the answer to the prompt above, or describe distinctive marks, decals, or contents only the real owner knows..."
+              required
+            ></textarea>
+            <span class="field-help-text">Never share passwords, banking PINs, or private identity numbers.</span>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="claimStudentEmail">
+              Your Campus Email <span class="field-required-star">*</span>
+            </label>
+            <input type="email" id="claimStudentEmail" class="form-text-input" placeholder="student.name@campus.edu" required>
+            <span class="field-help-text">Will be shown in masked form (e.g. <code>s.nam***@campus.edu</code>) to preserve your privacy.</span>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="claimPickupLocation">
+              Designated Safe Campus Pickup Station
+            </label>
+            <select id="claimPickupLocation" class="form-select-input">
+              <option value="Campus Safety Desk (Union 102)">Campus Safety Desk (Student Union Room 102)</option>
+              <option value="Main Library Information Desk">Main Library 1st Floor Information Desk</option>
+              <option value="Campus Rec Center Front Counter">Campus Recreation Center Front Counter</option>
+              <option value="Public Daytime Meetup (North Quad Lawn)">Public Daytime Meetup (North Quad Lawn)</option>
+            </select>
+            <span class="field-help-text">Campus exchange locations ensure student safety and official supervision.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer-row">
+          <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="closeModal('claimModal')">Cancel</button>
+          <button type="submit" class="btn-editorial-sm btn-editorial-found">Submit Claim for Review</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- Toast Notification Tray -->
+  <div id="toastContainer" class="editorial-toast-tray" aria-live="polite"></div>
+
+  <!-- MODAL: DEDICATED ITEM TRACKING SYSTEM -->
+  <div id="itemTrackingModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="trackingModalHeading">
+    <div class="editorial-modal-card modal-card-wide">
+      <div class="modal-header-row">
+        <div style="display: flex; align-items: center; gap: 10px; flex-wrap: wrap;">
+          <h3 id="trackingModalHeading" style="margin: 0; font-size: 1.2rem; font-weight: 800; display: flex; align-items: center; gap: 8px;">
+            <svg width="20" height="20" fill="none" stroke="currentColor" viewBox="0 0 24 24" style="color: var(--accent-blue);">
+              <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 5H7a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2V7a2 2 0 00-2-2h-2M9 5a2 2 0 002 2h2a2 2 0 002-2M9 5a2 2 0 012-2h2a2 2 0 012 2m-3 7h3m-3 4h3m-6-4h.01M9 16h.01"></path>
+            </svg>
+            Item Tracking Journey
+          </h3>
+          <span id="trackingReportIdBadge" class="report-id-pill">LL-LST-1001</span>
+          <span id="trackingStatusBadge" class="status-badge badge-searching">Searching</span>
+        </div>
+        <button class="modal-close-icon" onclick="closeModal('itemTrackingModal')" aria-label="Close tracking modal">&times;</button>
+      </div>
+
+      <div class="modal-body-content" style="max-height: calc(85vh - 130px); overflow-y: auto;">
+        <!-- Top Item Summary Card -->
+        <div class="tracking-summary-card">
+          <div class="tracking-summary-left">
+            <span id="trackingTypeTag" class="tracking-type-pill">Lost Report</span>
+            <h4 id="trackingItemTitle" class="tracking-summary-title">Sony WH-1000XM4 Noise-Cancelling Headphones</h4>
+            <div class="tracking-summary-meta">
+              <span id="trackingItemCategory">Electronics & Tech</span> &bull; 
+              <span id="trackingItemLocation">Main Library (3rd Floor)</span> &bull; 
+              <span>Created <strong id="trackingItemCreated">Oct 25, 2026</strong></span>
+            </div>
+          </div>
+          <div class="tracking-summary-right">
+            <div class="tracking-timestamp-box">
+              <span class="tracking-timestamp-label">Last Status Update</span>
+              <span id="trackingLastUpdatedTime" class="tracking-timestamp-val">Just now</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Available Next Actions Bar -->
+        <div class="tracking-actions-bar">
+          <div class="tracking-actions-label">Available Actions:</div>
+          <div id="trackingActionButtons" class="tracking-actions-group">
+            <!-- Dynamically populated based on valid state transitions -->
+          </div>
+        </div>
+
+        <!-- Linked Potential Matches Section (If Any) -->
+        <div id="trackingMatchesContainer" style="display: none; margin-bottom: 24px;">
+          <!-- Dynamically populated if candidate matches exist -->
+        </div>
+
+        <!-- Vertical Recovery Timeline -->
+        <div class="tracking-timeline-section">
+          <div class="timeline-section-header">
+            <div>
+              <h5 class="timeline-section-title">Recovery Lifecycle Timeline</h5>
+              <p class="timeline-section-desc">Independent verified audit trail for this report</p>
+            </div>
+            <div class="timeline-legend">
+              <span class="legend-dot dot-completed"></span> Completed
+              <span class="legend-dot dot-current"></span> Current Stage
+              <span class="legend-dot dot-upcoming"></span> Upcoming
+            </div>
+          </div>
+
+          <!-- Vertical Timeline Nodes Container -->
+          <div id="itemTrackingTimeline" class="timeline-track-list">
+            <!-- Dynamically built via buildRenderableTimeline -->
+          </div>
+        </div>
+      </div>
+
+      <div class="modal-footer-row">
+        <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="closeModal('itemTrackingModal')">Done</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REWARD PERK DETAIL & REDEMPTION CONFIRMATION -->
+  <div id="rewardDetailModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="rewardModalTitle">
+    <div class="editorial-modal-card">
+      <div class="modal-header-row">
+        <div style="display: flex; align-items: center; gap: 8px;">
+          <h3 id="rewardModalTitle" style="margin: 0; font-size: 1.18rem; font-weight: 800;">Reward Details</h3>
+          <span id="rewardModalCategoryBadge" class="status-badge">Campus Swag</span>
+        </div>
+        <button class="modal-close-icon" onclick="closeModal('rewardDetailModal')" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <div class="modal-body-content">
+        <!-- Visual & Header Box -->
+        <div class="reward-modal-top-card">
+          <div id="rewardModalVisualEmblem" class="reward-modal-emblem">✨</div>
+          <div style="flex: 1;">
+            <h4 id="rewardModalName" style="font-size: 1.25rem; font-weight: 800; color: var(--text-headline); margin: 0 0 4px 0;">Reward Name</h4>
+            <div style="display: flex; gap: 8px; align-items: center; flex-wrap: wrap;">
+              <span id="rewardModalCostTag" class="wallet-currency-tag" style="font-size: 0.84rem; padding: 3px 10px;">100 LoopPoints</span>
+              <span id="rewardModalStockTag" class="stock-status-pill in-stock">45 in stock</span>
+              <span class="report-id-pill" style="color: #b45309; border-color: #fde68a; background: #fefce8;">Demo Reward</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div style="margin-bottom: 16px;">
+          <h5 class="field-section-title">Description</h5>
+          <p id="rewardModalDesc" style="font-size: 0.88rem; color: var(--text-body); line-height: 1.5; margin: 0;"></p>
+        </div>
+
+        <!-- Redemption Instructions -->
+        <div class="reward-instructions-box">
+          <div style="font-size: 0.72rem; font-weight: 800; color: #1e40af; text-transform: uppercase; margin-bottom: 4px;">Redemption & Pickup Instructions</div>
+          <p id="rewardModalInstructions" style="font-size: 0.84rem; color: #1e3a8a; margin: 0; line-height: 1.45;"></p>
+        </div>
+
+        <!-- Sponsor & Terms -->
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-bottom: 16px; font-size: 0.78rem;">
+          <div style="background: var(--bg-surface-subtle); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+            <strong style="color: var(--text-light); display: block; margin-bottom: 2px;">Campus Partner / Sponsor:</strong>
+            <span id="rewardModalSponsor" style="color: var(--text-headline); font-weight: 600;">Campus Life</span>
+          </div>
+          <div style="background: var(--bg-surface-subtle); padding: 10px 12px; border-radius: var(--radius-sm); border: 1px solid var(--border-light);">
+            <strong style="color: var(--text-light); display: block; margin-bottom: 2px;">Terms & Conditions:</strong>
+            <span id="rewardModalTerms" style="color: var(--text-body);">Demo reward. Non-refundable.</span>
+          </div>
+        </div>
+
+        <!-- Balance Comparison Banner -->
+        <div id="rewardBalanceCheckBanner" class="reward-balance-check">
+          <!-- Populated dynamically based on balance -->
+        </div>
+      </div>
+
+      <div class="modal-footer-row">
+        <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="closeModal('rewardDetailModal')">Cancel</button>
+        <button type="button" id="confirmRedeemBtn" class="btn-editorial-sm btn-editorial-found" onclick="executeRedemption()">
+          Confirm Redemption
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: REDEMPTION SUCCESS & VOUCHER PASS CODE -->
+  <div id="redemptionSuccessModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="voucherSuccessHeading">
+    <div class="editorial-modal-card" style="text-align: center;">
+      <div style="padding: 10px 0 0 0;">
+        <div class="success-confetti-circle">✓</div>
+        <h3 id="voucherSuccessHeading" style="font-size: 1.35rem; font-weight: 800; color: var(--text-headline); margin: 12px 0 4px 0;">Reward Redeemed!</h3>
+        <p style="font-size: 0.86rem; color: var(--text-muted); margin: 0 0 16px 0;">
+          Your LoopPoints have been safely deducted. Present your unique campus voucher pass code below to claim your perk.
+        </p>
+
+        <!-- Voucher Display Card -->
+        <div class="voucher-ticket-box">
+          <div class="voucher-ticket-header">
+            <span id="successRewardName" style="font-weight: 800; font-size: 1.05rem; color: var(--text-headline);">LostLoop Sticker Pack</span>
+            <span id="successPointsDeducted" class="voucher-pts-badge">-100 LoopPoints</span>
+          </div>
+          
+          <div class="voucher-code-label">OFFICIAL REDEMPTION PASS CODE</div>
+          <div id="successVoucherCode" class="voucher-code-display" onclick="copyVoucherCode()" title="Click to copy voucher code">
+            LL-VCHR-4921-884
+          </div>
+          <div id="copyNotice" style="font-size: 0.72rem; color: var(--text-light); margin-top: 4px;">Click code to copy to clipboard</div>
+
+          <div class="voucher-ticket-footer">
+            <div id="successInstructions" style="font-size: 0.8rem; color: var(--text-body); line-height: 1.45; margin-bottom: 8px;"></div>
+            <div style="font-size: 0.74rem; color: var(--text-muted);">
+              Redemption ID: <strong id="successRedemptionId">RDM-1761600000</strong> &bull; Status: <strong id="successStatusBadge" style="color: #047857;">Issued</strong>
+            </div>
+          </div>
+        </div>
+
+        <div style="margin-top: 20px; display: flex; justify-content: center; gap: 10px;">
+          <button class="btn-editorial-sm btn-editorial-outline" onclick="closeModal('redemptionSuccessModal')">Close</button>
+          <button class="btn-pill-dark" onclick="closeModal('redemptionSuccessModal'); switchTab('rewards'); switchActivityTab('redemptions');">
+            View in My Redemptions
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- MODAL: ADD / EDIT REWARD CATALOGUE ITEM (ADMIN) -->
+  <div id="adminRewardModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="adminRewardTitle">
+    <div class="editorial-modal-card">
+      <div class="modal-header-row">
+        <h3 id="adminRewardTitle">Add New Reward Perk (Admin)</h3>
+        <button class="modal-close-icon" onclick="closeModal('adminRewardModal')" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="adminRewardForm" onsubmit="handleAdminAddReward(event)">
+        <div class="modal-body-content">
+          <div class="form-field-group">
+            <label class="form-field-label" for="adminRewardName">Reward Name <span class="field-required-star">*</span></label>
+            <input type="text" id="adminRewardName" class="form-text-input" placeholder="e.g. Campus Bookstore 15% Discount Pass" required>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-field-group">
+              <label class="form-field-label" for="adminRewardCategory">Category</label>
+              <select id="adminRewardCategory" class="form-select-input">
+                <option value="Campus Swag">Campus Swag</option>
+                <option value="Food & Drink">Food & Drink</option>
+                <option value="Academic">Academic & Supplies</option>
+                <option value="General">General Perks</option>
+              </select>
+            </div>
+            <div class="form-field-group">
+              <label class="form-field-label" for="adminRewardCost">Cost (LoopPoints) <span class="field-required-star">*</span></label>
+              <input type="number" id="adminRewardCost" class="form-text-input" min="25" step="25" value="150" required>
+            </div>
+          </div>
+
+          <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+            <div class="form-field-group">
+              <label class="form-field-label" for="adminRewardStock">Initial Inventory Stock</label>
+              <input type="number" id="adminRewardStock" class="form-text-input" min="1" value="20" required>
+            </div>
+            <div class="form-field-group">
+              <label class="form-field-label" for="adminRewardVisual">Visual Icon Emblem</label>
+              <select id="adminRewardVisual" class="form-select-input">
+                <option value="sparkles">✨ Sparkles / Swag</option>
+                <option value="coffee">☕ Beverage / Coffee</option>
+                <option value="pencil">✏️ Stationery / Notebook</option>
+                <option value="printer">🖨️ Printing Credits</option>
+                <option value="shopping-bag">🛍️ Tote / Apparel</option>
+                <option value="book">📚 Books / Study</option>
+              </select>
+            </div>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="adminRewardDesc">Perk Description</label>
+            <textarea id="adminRewardDesc" class="form-textarea-input" rows="2" placeholder="Briefly describe what the student receives..."></textarea>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="adminRewardInstructions">Pickup & Redemption Instructions</label>
+            <input type="text" id="adminRewardInstructions" class="form-text-input" placeholder="e.g. Present voucher code at Campus Bookstore Customer Service desk.">
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="adminRewardSponsor">Sponsor Department</label>
+            <input type="text" id="adminRewardSponsor" class="form-text-input" placeholder="e.g. Campus Student Life">
+          </div>
+        </div>
+
+        <div class="modal-footer-row">
+          <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="closeModal('adminRewardModal')">Cancel</button>
+          <button type="submit" class="btn-editorial-sm btn-editorial-found">Save Reward to Catalogue</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- MODAL: MANUAL AUDIT POINT ADJUSTMENT (ADMIN) -->
+  <div id="adminAdjustModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="adminAdjustTitle">
+    <div class="editorial-modal-card">
+      <div class="modal-header-row">
+        <h3 id="adminAdjustTitle">Manual Point Adjustment & Audit Log</h3>
+        <button class="modal-close-icon" onclick="closeModal('adminAdjustModal')" aria-label="Close dialog">&times;</button>
+      </div>
+
+      <form id="adminAdjustForm" onsubmit="handleAdminPointAdjustment(event)">
+        <div class="modal-body-content">
+          <p style="font-size: 0.82rem; color: var(--text-muted); margin-bottom: 14px;">
+            Every manual point addition or reduction creates an immutable compensating ledger record attributed to your administrator account.
+          </p>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="adminAdjustAmount">Adjustment Amount (LoopPoints) <span class="field-required-star">*</span></label>
+            <input type="number" id="adminAdjustAmount" class="form-text-input" placeholder="e.g. 50 (or -50 to deduct)" required>
+            <span class="field-help-text">Enter positive number to award bonus points, or negative number to deduct.</span>
+          </div>
+
+          <div class="form-field-group">
+            <label class="form-field-label" for="adminAdjustReason">Mandatory Audit Justification / Reason <span class="field-required-star">*</span></label>
+            <textarea id="adminAdjustReason" class="form-textarea-input" rows="2" placeholder="e.g. Special campus volunteer recognition for orientation week assistance" required></textarea>
+            <span class="field-help-text">Must be at least 5 characters. Will be recorded in public transaction ledger.</span>
+          </div>
+        </div>
+
+        <div class="modal-footer-row">
+          <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="closeModal('adminAdjustModal')">Cancel</button>
+          <button type="submit" class="btn-editorial-sm btn-editorial-found">Apply & Record Adjustment</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- FLOATING AI RECOVERY ASSISTANT TRIGGER BUTTON -->
+  <button id="aiAssistantToggleBtn" class="ai-fab-btn" onclick="toggleAiAssistant()" aria-label="Open LostLoop Recovery Assistant" title="Open LostLoop AI Recovery Assistant">
+    <div class="ai-fab-icon-wrapper">
+      <svg class="ai-fab-sparkle" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+        <path stroke-linecap="round" stroke-linejoin="round" d="M9.813 15.904L9 18.75l-.813-2.846a4.5 4.5 0 00-3.09-3.09L2.25 12l2.846-.813a4.5 4.5 0 003.09-3.09L9 5.25l.813 2.846a4.5 4.5 0 003.09 3.09L15.75 12l-2.846.813a4.5 4.5 0 00-3.09 3.09zM18.259 8.715L18 9.75l-.259-1.035a3.375 3.375 0 00-2.455-2.456L14.25 6l1.036-.259a3.375 3.375 0 002.455-2.456L18 2.25l.259 1.035a3.375 3.375 0 002.456 2.456L21.75 6l-1.035.259a3.375 3.375 0 00-2.456 2.456zM16.894 20.567L16.5 21.75l-.394-1.183a2.25 2.25 0 00-1.423-1.423L13.5 18.75l1.183-.394a2.25 2.25 0 001.423-1.423l.394-1.183.394 1.183a2.25 2.25 0 001.423 1.423l1.183.394-1.183.394a2.25 2.25 0 00-1.423 1.423z"></path>
+      </svg>
+      <span class="ai-fab-badge">AI</span>
+    </div>
+    <span class="ai-fab-label">Recovery Assistant</span>
+  </button>
+
+  <!-- FLOATING AI ASSISTANT CHAT DRAWER -->
+  <div id="aiAssistantDrawer" class="ai-chat-drawer" role="complementary" aria-label="LostLoop AI Assistant Chat Window">
+    <div class="ai-drawer-header">
+      <div class="ai-header-brand">
+        <div class="ai-avatar-emblem">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2">
+            <path stroke-linecap="round" stroke-linejoin="round" d="M18.178 8c5.096 0 5.096 8 0 8-5.095 0-7.133-8-12.739-8-4.585 0-4.585 8 0 8 5.606 0 7.644-8 12.739-8z"></path>
+          </svg>
+        </div>
+        <div class="ai-header-titles">
+          <div class="ai-title-row">
+            <span class="ai-title">LostLoop Recovery Assistant</span>
+            <span class="ai-badge-chip">Smart NLP</span>
+          </div>
+          <div class="ai-status-row">
+            <span class="ai-status-dot"></span>
+            <span class="ai-status-text">Campus Assistant &bull; Offline Safe</span>
+          </div>
+        </div>
+      </div>
+      <div class="ai-header-controls">
+        <button class="ai-control-btn" onclick="resetAiChat()" title="Reset conversation" aria-label="Reset conversation">
+          <svg width="15" height="15" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M4 4v5h.582m15.356 2A8.001 8.001 0 004.582 9m0 0H9m11 11v-5h-.581m0 0a8.003 8.003 0 01-15.357-2m15.357 2H15"></path>
+          </svg>
+        </button>
+        <button class="ai-control-btn" onclick="toggleAiAssistant()" title="Close chat" aria-label="Close chat">
+          <svg width="17" height="17" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M6 18L18 6M6 6l12 12"></path>
+          </svg>
+        </button>
+      </div>
+    </div>
+
+    <!-- Quick Prompt Pills Bar -->
+    <div id="aiQuickPrompts" class="ai-quick-prompts-bar">
+      <!-- Populated dynamically -->
+    </div>
+
+    <!-- Chat Messages Scroll Container -->
+    <div id="aiChatMessages" class="ai-chat-messages" tabindex="0" aria-live="polite">
+      <!-- Chat bubbles populated dynamically -->
+    </div>
+
+    <!-- Typing Indicator -->
+    <div id="aiTypingIndicator" class="ai-typing-indicator" style="display: none;">
+      <div class="ai-typing-bubble">
+        <span class="ai-typing-dot"></span>
+        <span class="ai-typing-dot"></span>
+        <span class="ai-typing-dot"></span>
+      </div>
+      <span class="ai-typing-label">Analyzing campus reports...</span>
+    </div>
+
+    <!-- Chat Input Form -->
+    <form id="aiChatForm" class="ai-chat-form" onsubmit="handleAiChatSubmit(event)">
+      <div class="ai-input-wrapper">
+        <input 
+          type="text" 
+          id="aiChatInput" 
+          class="ai-chat-input" 
+          placeholder="e.g. I lost my navy Hydro Flask with stickers in the library..." 
+          autocomplete="off"
+          aria-label="Message to LostLoop Recovery Assistant"
+        >
+        <button type="submit" class="ai-send-btn" aria-label="Send message">
+          <svg width="18" height="18" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 19l9 2-9-18-9 18 9-2zm0 0v-8"></path>
+          </svg>
+        </button>
+      </div>
+      <div class="ai-input-disclaimer">
+        <span>🔒 Zero fake scores &bull; Contact info & verification secrets never leaked</span>
+      </div>
+    </form>
+  </div>
+
+  <!-- MODAL: Switch Active College / Campus -->
+  <div id="collegeSwitcherModal" class="editorial-modal-backdrop" role="dialog" aria-modal="true" aria-labelledby="switcherModalTitle">
+    <div class="editorial-modal-card" style="max-width: 540px;">
+      <div class="editorial-modal-header">
+        <div>
+          <span class="modal-pre-title">CAMPUS NETWORK</span>
+          <h3 id="switcherModalTitle" class="modal-title" style="margin-top: 2px;">Switch College or Campus</h3>
+        </div>
+        <button class="modal-close-btn" onclick="closeCollegeSwitcherModal()" aria-label="Close modal">✕</button>
+      </div>
+
+      <div class="editorial-modal-body">
+        <p style="font-size: 0.86rem; color: var(--text-muted); margin-bottom: 12px; line-height: 1.45;">
+          Selecting another campus will refresh your feed and match suggestions to that institution. Reports from other colleges are isolated to protect student privacy.
+        </p>
+
+        <!-- Search Bar in Switcher -->
+        <div class="college-search-box" style="margin-bottom: 14px;">
+          <svg class="college-search-icon" width="16" height="16" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"></path>
+          </svg>
+          <input 
+            type="text" 
+            id="switcherSearchInput" 
+            class="college-search-input" 
+            placeholder="Search campus by name, city, or code..." 
+            oninput="handleSwitcherSearchInput(event)"
+          />
+        </div>
+
+        <!-- Switcher Results List -->
+        <div id="switcherCollegesList" class="college-results-list" style="max-height: 240px;">
+          <!-- Populated dynamically by renderSwitcherCollegeList() -->
+        </div>
+      </div>
+
+      <div class="editorial-modal-footer" style="display: flex; justify-content: flex-end; gap: 8px;">
+        <button type="button" class="btn-editorial-sm btn-editorial-outline" onclick="closeCollegeSwitcherModal()">Cancel</button>
+        <button type="button" id="btnConfirmSwitchCampus" class="btn-editorial-sm btn-editorial-found" disabled onclick="executeSwitchCollege()">Switch Campus</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Scripts -->
+  <script src="data.js"></script>
+  <script src="matching.js"></script>
+  <script src="tracking.js"></script>
+  <script src="assistant.js"></script>
+  <script src="rewards.js"></script>
+  <script src="app.js"></script>
+</body>
+</html>
