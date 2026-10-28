@@ -278,15 +278,15 @@ LostLoop/
 ### 1. Clone the repository
 
 ```bash
-git clone YOUR_REPOSITORY_URL
+git clone https://github.com/ShreyaDawkhar/LostLoop
 ```
 
-Replace `YOUR_REPOSITORY_URL` with your GitHub repository URL.
+Replace `https://github.com/ShreyaDawkhar/LostLoop` with your GitHub repository URL.
 
 ### 2. Open the project folder
 
 ```bash
-cd YOUR_REPOSITORY_FOLDER
+cd LostLoop
 ```
 
 ### 3. Start the local server
