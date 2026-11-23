@@ -1,0 +1,23 @@
+{
+  "name": "lostloop",
+  "version": "1.0.0",
+  "description": "LostLoop — Campus Lost & Found Web Application",
+  "main": "index.html",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/ShreyaDawkhar/LostLoop.git"
+  },
+  "keywords": [
+    "lost-and-found",
+    "campus",
+    "college"
+  ],
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "@vercel/analytics": "^1.4.1"
+  }
+}
